@@ -22,8 +22,9 @@ if (isset($_POST['func'])) {
         default:
             $data = [
                 'error' => 'Page not found',
+                'message' => 'The requested page was not found.'
             ];
-            $response = null;
+            $response = json_encode($data);
             http_response_code(404); // Set a 404 status code for not found
         break;
     }

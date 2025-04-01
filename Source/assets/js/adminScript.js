@@ -1,94 +1,76 @@
-
-/*
 $(function () {
-  const pagesCache = {};
-  function loadPage(page, addToHistory = true) {
-    // $.ajax({
-    //     url: './handle/adminHandler.php', // gửi data tới file php chuyen trang
-    //     type: 'POST',
-    //     data: { page: page },
-    //     success: function (response) { //function nhan response tu file php
-    //         $('#main-content').html(response);
+    const pagesCache = {};
 
-    //         let newUrl = window.location.pathname + "?page=" + page;
+    function loadPage(page, addToHistory = true) {
+        if (!page) page = "ctdtPage"; // Default page
 
-    //         if (addToHistory) {
-    //             history.pushState({ page: page }, "", newUrl);
-    //         }
-    //     }
-    // });
-    $("#main-content").load("./views/admin/" + page + ".php");
-    let newUrl = window.location.pathname + "?page=" + page;
-    if (addToHistory) {
-      history.pushState({ page: page }, "", newUrl);
-    }
-  }
+        // Prevent reloading the same page
+        if ($("#main-content").data("current-page") === page) return;
 
-  $(".nav-link").on("click", function (e) {
-    e.preventDefault();
-    let page = $(this).data("page");
+        $("#main-content").data("current-page", page);
 
-    loadPage(page);
-  });
+        $(".nav-link").removeClass("active");
+        $(`.nav-link[data-page="${page}"]`).addClass("active");
 
-  // Get current URL
-  let url = window.location.href;
-  let page = url.split("?page=")[1];
-  if (!page) {
-    page = "ctdtPage";
-  }
-  loadPage(page);
- 
-});
-*/
-//==========================================================
-//===============================================
-$(function () {
-    $('.nav-link').on('click', function (e) {
-        e.preventDefault();
-        $('.nav-link').removeClass('active');
-        $(this).addClass('active');
-
-        let page = $(this).data('page');
-
-        // Remove previous scripts before loading new page.
-        $('.nav-link').each(function () {
-            let previousPage = $(this).data('page');
+        // Remove previous scripts
+        $(".nav-link").each(function () {
+            let previousPage = $(this).data("page");
             if (previousPage !== page) {
                 removeSubpageScript(previousPage);
             }
         });
 
-        $('#main-content').load("./views/admin/" + page + ".php", function () {
-            let script = document.createElement('script');
-            script.src = './views/javascript/' + page + '.js';
-            script.type = 'text/javascript';
-            script.id = page + '-script';
+        // Load content
+        $("#main-content").load(`./views/admin/${page}.php`, function () {
+            let scriptSrc = `./views/javascript/${page}.js`;
 
-            if (!document.getElementById(page + '-script')) {
-                // Check if the script file exists before appending
+            if (!document.getElementById(page + "-script")) {
                 $.ajax({
-                    url: script.src,
-                    type: 'HEAD',
+                    url: scriptSrc,
+                    type: "HEAD",
                     success: function () {
-                        // File exists, append the script
+                        let script = document.createElement("script");
+                        script.src = scriptSrc;
+                        script.type = "text/javascript";
+                        script.id = page + "-script";
                         document.body.appendChild(script);
                     },
                     error: function () {
-                        // File does not exist, handle the error (optional)
-                        console.warn('JavaScript file not found: ' + script.src);
-                        // You could add a fallback or show a message to the user here.
+                        console.warn("JavaScript file not found: " + scriptSrc);
                     }
                 });
             }
-        });
-    });
 
-    // Function to remove the JavaScript file when leaving the subpage
+            if (addToHistory) {
+                let newUrl = window.location.pathname + "?page=" + page;
+                history.pushState({ page: page }, "", newUrl);
+            }
+        });
+    }
+
     function removeSubpageScript(page) {
-        let script = document.getElementById(page + '-script');
+        let script = document.getElementById(page + "-script");
         if (script) {
             script.remove();
         }
     }
+
+    // Click event for navigation links
+    $(".nav-link").on("click", function (e) {
+        e.preventDefault();
+        let page = $(this).data("page");
+        loadPage(page);
+    });
+
+    // Handle browser back/forward buttons
+    window.onpopstate = function (event) {
+        if (event.state && event.state.page) {
+            loadPage(event.state.page, false);
+        }
+    };
+
+    // Load the initial page from URL
+    let urlParams = new URLSearchParams(window.location.search);
+    let initialPage = urlParams.get("page") || "ctdtPage";
+    loadPage(initialPage, false);
 });

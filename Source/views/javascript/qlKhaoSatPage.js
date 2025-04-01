@@ -34,8 +34,9 @@ $(function () {
   (async () => {
     const ksList = await getAllKhaoSat();
     // console.log(ksList);
-    if (ksList != null) {
-
+    if (ksList.error != undefined) {
+      console.log(ksList.error);
+    } else  {
       ksList.map((item) => {
         $("#ks-list").append(`
           <tr>
@@ -58,12 +59,7 @@ $(function () {
   
         `);
       });
-
-      const t = await getKhaoSatById(1);
-      console.log(t);
-    } else {
-      console.log("null");
-    }
+    } 
      // This will be the JSON object
   })();
 });
