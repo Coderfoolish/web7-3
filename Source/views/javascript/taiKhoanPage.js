@@ -11,7 +11,7 @@ async function getAllTaiKhoan() {
     console.log("fetch",response)
     return response;
   } catch (error) {
-    console.log("Lỗi khi fetch danh sách tài khoản", error.responseText);
+    console.log("Lỗi khi fetch danh sách tài khoản", error);
     return null;
   }
 }

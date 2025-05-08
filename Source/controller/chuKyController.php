@@ -1,14 +1,6 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-header('Content-Type: application/json');
-
 require_once __DIR__ . '/../models/chuKyModel.php';
-require_once __DIR__ . '/../utils/JwtUtil.php';
-
-session_start();
-
-// var_dump($_SESSION);
+// header('Content-Type: application/json'); 
 
 if (isset($_GET['func'])) {
     $func = $_GET['func'];
@@ -19,130 +11,64 @@ if (isset($_GET['func'])) {
 
     switch ($func) {
         case "getAll":
-            if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
-                $accessToken = $_SESSION['accessToken'];
-                $isVaid = isAuthorization($accessToken, 'view.program');
-                if ($isVaid) {
-                    $response = $chukyModel->getAll();
-                } else {
-                    $response = [
-                        'status' => false,
-                        'message' => 'Bạn không có quyền để thực hiện việc này'
-                    ];
-                }
-            }
+            $response = $chukyModel->getAll();
             break;
         case "getAllpaging":
-            if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
-                $accessToken = $_SESSION['accessToken'];
-                $isVaid = isAuthorization($accessToken, 'view.program');
-                if ($isVaid) {
-                    $page = isset($_GET["page"]) && $_GET["page"] !== '' ? $_GET["page"] : 1;
-                    $status = isset($_GET["status"]) && $_GET["status"] !== '' ? $_GET["status"] : null;
-                    $txt_search = isset($_GET["txt_search"]) ? $_GET["txt_search"] : '';
-                    $response = $chukyModel->getAllpaging($page, $status, $txt_search);
-                } else {
-                    $response = [
-                        'status' => false,
-                        'message' => 'Bạn không có quyền để thực hiện việc này'
-                    ];
-                }
-            }
+            $page = isset($_GET["page"]) && $_GET["page"] !== '' ? $_GET["page"] : 1;
+            $status = isset($_GET["status"]) && $_GET["status"] !== '' ? $_GET["status"] : null;
+            $txt_search = isset($_GET["txt_search"]) ? $_GET["txt_search"] : '';
+            $response = $chukyModel->getAllpaging($page, $status, $txt_search);
             break;
         case "getById":
-            if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
-                $accessToken = $_SESSION['accessToken'];
-                $isVaid = isAuthorization($accessToken, 'view.program');
-                if ($isVaid) {
-                    if (isset($_GET["ck_id"]) && $_GET["ck_id"] !== '') {
-                        $ckId = $_GET["ck_id"];
-                        $response = $chukyModel->getById($ckId);
-                    }
-                } else {
-                    $response = [
-                        'status' => false,
-                        'message' => 'Bạn không có quyền để thực hiện việc này'
-                    ];
-                }
+            if (isset($_GET["ck_id"]) && $_GET["ck_id"] !== '') {
+                $ckId = $_GET["ck_id"];
+                $response = $chukyModel->getById($ckId);
             }
             break;
         case "create":
-            if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
-                $accessToken = $_SESSION['accessToken'];
-                $isVaid = isAuthorization($accessToken, 'create.program');
-                if ($isVaid) {
-                    if (isset($_GET["ten_ck"]) && $_GET["ten_ck"] !== '') {
-                        $ten_ck = $_GET["ten_ck"];
-                        if ($chukyModel->isExist($ten_ck, null)) {
-                            $response = [
-                                'status' => false,
-                                'message' => 'Chu kỳ đã tồn tại'
-                            ];
-                        } else {
-                            $status = isset($_GET["status"]) && $_GET["status"] !== '' ? $_GET["status"] : null;
-                            $data = $chukyModel->create($ten_ck, $status);
-                            $response = [
-                                'status' => true,
-                                'data' => $data
-                            ];
-                        }
-                    }
-                } else {
+            if (isset($_GET["ten_ck"]) && $_GET["ten_ck"] !== '') {
+                $ten_ck = $_GET["ten_ck"];
+                if ($chukyModel->isExist($ten_ck)) {
                     $response = [
                         'status' => false,
-                        'message' => 'Bạn không có quyền để thực hiện việc này'
+                        'message' => 'Chu kỳ đã tồn tại'
+                    ];
+                } else {
+                    $status = isset($_GET["status"]) && $_GET["status"] !== '' ? $_GET["status"] : null;
+                    $data = $chukyModel->create($ten_ck, $status);
+                    $response = [
+                        'status' => true,
+                        'data' => $data
                     ];
                 }
             }
             break;
         case "update":
-            if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
-                $accessToken = $_SESSION['accessToken'];
-                $isVaid = isAuthorization($accessToken, 'edit.program');
-                if ($isVaid) {
-                    if (
-                        isset($_GET["ck_id"]) && $_GET["ck_id"] !== '' &&
-                        isset($_GET["ten_ck"]) && $_GET["ten_ck"] !== ''
-                    ) {
-                        $ck_id = $_GET["ck_id"];
-                        $ten_ck = $_GET["ten_ck"];
-                        if ($chukyModel->isExist($ten_ck, $ck_id)) {
-                            $response = [
-                                'status' => false,
-                                'message' => 'Chu kỳ đã tồn tại'
-                            ];
-                        } else {
-                            $status = isset($_GET["status"]) && $_GET["status"] !== '' ? $_GET["status"] : null;
-                            $data = $chukyModel->update($ck_id, $ten_ck, $status);
-                            $response = [
-                                'status' => true,
-                                'data' => $data
-                            ];
-                        }
-                    }
-                } else {
+            if (
+                isset($_GET["ck_id"]) && $_GET["ck_id"] !== '' &&
+                isset($_GET["ten_ck"]) && $_GET["ten_ck"] !== ''
+            ) {
+                $ck_id = $_GET["ck_id"];
+                $ten_ck = $_GET["ten_ck"];
+                if ($chukyModel->isExist($ten_ck)) {
                     $response = [
                         'status' => false,
-                        'message' => 'Bạn không có quyền để thực hiện việc này'
+                        'message' => 'Chu kỳ đã tồn tại'
+                    ];
+                } else {
+                    $status = isset($_GET["status"]) && $_GET["status"] !== '' ? $_GET["status"] : null;
+                    $data = $chukyModel->update($ck_id, $ten_ck, $status);
+                    $response = [
+                        'status' => true,
+                        'data' => $data
                     ];
                 }
             }
             break;
         case "toggleStatus":
-            if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
-                $accessToken = $_SESSION['accessToken'];
-                $isVaid = isAuthorization($accessToken, 'edit.program');
-                if ($isVaid) {
-                    if (isset($_GET["ck_id"]) && $_GET["ck_id"] !== '') {
-                        $ck_id = $_GET["ck_id"];
-                        $response = $chukyModel->toggleStatus($ck_id);
-                    }
-                } else {
-                    $response = [
-                        'status' => false,
-                        'message' => 'Bạn không có quyền để thực hiện việc này'
-                    ];
-                }
+            if (isset($_GET["ck_id"]) && $_GET["ck_id"] !== '') {
+                $ck_id = $_GET["ck_id"];
+                $response = $chukyModel->toggleStatus($ck_id);
             }
             break;
         default:

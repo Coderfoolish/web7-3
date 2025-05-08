@@ -55,15 +55,6 @@ async function loadDsKhaoSat(page = 1, txt_search = null,
     console.log(ks_ids);
     const ksList = await getAllKhaoSat(page, ks_ids, txt_search, ngay_bat_dau, ngay_ket_thuc, nks_id, nganh, chuky);
 
-    if (ksList?.status === false && ksList?.message) {
-        Swal.fire({
-            title: "Thông báo",
-            text: ksList.message,
-            icon: "warning"
-        });
-        return;
-    }
-
     console.log(ksList);
     console.log(ks_ids);
 
@@ -89,29 +80,31 @@ async function loadDsKhaoSat(page = 1, txt_search = null,
         `);
         });
 
-        renderPagination(ksList.data.totalPages, ksList.data.currentPage);
+        renderPagination(ksList.totalPages, ksList.currentPage);
     }
 }
 
 
 function renderPagination(totalPages, currentPage) {
-    if (totalPages <= 1) {
-        $("#pagination").empty();
-        return;
-    }
+    let html = '';
 
-    $("#pagination").empty();
-
-    $("#pagination").append(`<button type="button" class="btn btn-text btn-prev"><<</button><div class="flex items-center gap-x-1">`);
+    // Nút trước
+    html += `<button class="btn btn-sm btn-prev" ${currentPage == 1 ? 'disabled' : ''}><<</button>`;
 
     for (let i = 1; i <= totalPages; i++) {
-        let activeClass = (i == currentPage) ? 'aria-current="page"' : '';
-        $("#pagination").append(`
-            <button type="button" class="btn btn-text btn-square aria-[current='page']:text-bg-primary btn-page" data-page="${i}" ${activeClass}>${i}</button>
-        `);
+        html += `
+            <button 
+                class="btn btn-sm btn-page ${i === currentPage ? 'btn-active' : ''}" 
+                data-page="${i}" 
+                ${i === currentPage ? 'aria-current="page"' : ''}>
+                ${i}
+            </button>
+        `;
     }
 
-    $("#pagination").append(`</div><button type="button" class="btn btn-text btn-next">>></button>`);
+    html += `<button class="btn btn-sm btn-next" ${currentPage == totalPages ? 'disabled' : ''}>>></button>`;
+
+    $("#pagination").html(html);
 }
 
 async function getAllChuky() {
@@ -232,6 +225,7 @@ $(document).ready(function () {
     loadAllChuky();
     loadAllNganh();
     loadAllNhomKhaoSat();
+
     $(".main-content").on("click", ".action-item", function (e) {
         e.preventDefault();
         let action = $(this).data("act");
@@ -261,7 +255,7 @@ $(document).ready(function () {
     }
 
     // Nút Tìm kiếm
-    $("#search-keyword").on("input", function () {
+    $("#btn-search").on("click", function () {
         const filters = getFilterData();
         console.log("Tìm kiếm với:", filters);
         loadDsKhaoSat(filters.page, filters.txt_search, filters.ngay_bat_dau, filters.ngay_ket_thuc, filters.nks_id, filters.nganh, filters.chuky);  // Gọi hàm loadDsKhaoSat với bộ lọc

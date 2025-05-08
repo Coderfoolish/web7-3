@@ -108,7 +108,7 @@ if (isset($_POST['action']) && $_POST['action'] == 'updateAccount') {
     if ($accountModel->usernameIsExist($username)) {
         echo json_encode([
             'status' => 'error',
-            'message' => 'Username đã tồn tại!'
+            'message' => 'Tài khoản đã tồn tại!'
         ]);
         exit;
     }

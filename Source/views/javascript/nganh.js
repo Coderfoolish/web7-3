@@ -20,14 +20,6 @@ async function getAllNganh(page = 1, status = null, txt_search = null) {
 
 async function loadAllNganh(page = 1, status = null, txt_search = null) {
     const res = await getAllNganh(page, status, txt_search);
-    if (res?.status === false && res?.message) {
-        Swal.fire({
-            title: "Thông báo",
-            text: res.message,
-            icon: "warning"
-        });
-        return;
-    }
     if (res) {
         console.log(res);
         const nganhList = res.data;
@@ -52,28 +44,15 @@ async function loadAllNganh(page = 1, status = null, txt_search = null) {
             `);
 
         });
-        renderPagination(totalPages, currentPage);
+        $("#pagination").append(`<button type="button" class="btn btn-text btn-prev">Previous</button><div class="flex items-center gap-x-1">`);
+        for (let i = 1; i <= totalPages; i++) {
+            let activeClass = (i == currentPage) ? 'aria-current="page"' : '';
+            $("#pagination").append(`
+                <button type="button" class="btn btn-text btn-square aria-[current='page']:text-bg-primary btn-page" data-page="${i}" ${activeClass}>${i}</button>
+            `);
+        }
+        $("#pagination").append(`</div><button type="button" class="btn btn-text btn-next">Next</button>`);
     }
-}
-
-function renderPagination(totalPages, currentPage) {
-    if (totalPages <= 1) {
-        $("#pagination").empty();
-        return;
-    }
-
-    $("#pagination").empty();
-
-    $("#pagination").append(`<button type="button" class="btn btn-text btn-prev"><<</button><div class="flex items-center gap-x-1">`);
-
-    for (let i = 1; i <= totalPages; i++) {
-        let activeClass = (i == currentPage) ? 'aria-current="page"' : '';
-        $("#pagination").append(`
-            <button type="button" class="btn btn-text btn-square aria-[current='page']:text-bg-primary btn-page" data-page="${i}" ${activeClass}>${i}</button>
-        `);
-    }
-
-    $("#pagination").append(`</div><button type="button" class="btn btn-text btn-next">>></button>`);
 }
 
 function create() {
@@ -184,10 +163,8 @@ function toggleStatus(nganh_id) {
                     showConfirmButton: false,
                     timer: 2000
                 });
-                const txtSearch = $("#search-keyword").val().trim();
-                    const selectedValue = $("#select-status").val();
-                    const status = selectedValue == -1 ? null : selectedValue;
-                loadAllNganh(1, status, txtSearch);
+                const currentPage = Number($("#pagination button[aria-current='page']").data("page"));
+                loadAllNganh(currentPage);
             }
 
         },
@@ -242,7 +219,7 @@ $(document).ready(function () {
         loadAllNganh(1, status, txtSearch);
     });
 
-    $("#search-keyword").on("input", function () {
+    $("#btn-search").on("click", function () {
         const txtSearch = $("#search-keyword").val().trim();
         const selectedValue = $("#select-status").val();
         const status = selectedValue == -1 ? null : selectedValue;

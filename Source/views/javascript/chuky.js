@@ -20,20 +20,13 @@ async function getAllChuky(page = 1, status = null, txt_search = null) {
 
 async function loadAllChuky(page = 1, status = null, txt_search = null) {
     const res = await getAllChuky(page, status, txt_search);
-    if (res?.status == false && res?.message) {
-        Swal.fire({
-            title: "Thông báo",
-            text: res.message,
-            icon: "warning"
-        });
-        return;
-    }
     if (res) {
         console.log(res);
         const chukyList = res.data;
         const totalPages = res.totalPages;
         const currentPage = res.currentPage;
         $("#chuky-list").empty();
+        $("#pagination").empty();
         chukyList.forEach(item => {
             $("#chuky-list").append(`
               <tr>
@@ -50,28 +43,15 @@ async function loadAllChuky(page = 1, status = null, txt_search = null) {
                 </tr>
             `);
         });
-        renderPagination(totalPages, currentPage);
+        $("#pagination").append(`<button type="button" class="btn btn-text btn-prev">Previous</button><div class="flex items-center gap-x-1">`);
+        for (let i = 1; i <= totalPages; i++) {
+            let activeClass = (i == currentPage) ? 'aria-current="page"' : '';
+            $("#pagination").append(`
+                <button type="button" class="btn btn-text btn-square aria-[current='page']:text-bg-primary btn-page" data-page="${i}" ${activeClass}>${i}</button>
+            `);
+        }
+        $("#pagination").append(`</div><button type="button" class="btn btn-text btn-next">Next</button>`);
     }
-}
-
-function renderPagination(totalPages, currentPage) {
-    if (totalPages <= 1) {
-        $("#pagination").empty();
-        return;
-    }
-
-    $("#pagination").empty();
-
-    $("#pagination").append(`<button type="button" class="btn btn-text btn-prev"><<</button><div class="flex items-center gap-x-1">`);
-
-    for (let i = 1; i <= totalPages; i++) {
-        let activeClass = (i == currentPage) ? 'aria-current="page"' : '';
-        $("#pagination").append(`
-            <button type="button" class="btn btn-text btn-square aria-[current='page']:text-bg-primary btn-page" data-page="${i}" ${activeClass}>${i}</button>
-        `);
-    }
-
-    $("#pagination").append(`</div><button type="button" class="btn btn-text btn-next">>></button>`);
 }
 
 function create() {
@@ -176,27 +156,16 @@ function toggleStatus(ck_id) {
             ck_id: ck_id,
         },
         success: function (response) {
-            if (response?.status == false && response?.message) {
+            if (response) {
                 Swal.fire({
-                    title: "Thông báo",
-                    text: response.message,
-                    icon: "warning"
+                    icon: 'success',
+                    title: 'Đổi trạng thái thành công!',
+                    showConfirmButton: false,
+                    timer: 2000
                 });
-            } else {
-                if (response) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Đổi trạng thái thành công!',
-                        showConfirmButton: false,
-                        timer: 2000
-                    });
-                    const txtSearch = $("#search-keyword").val().trim();
-                    const selectedValue = $("#select-status").val();
-                    const status = selectedValue == -1 ? null : selectedValue;
-                    loadAllChuky(1, status, txtSearch);
-                }
+                const currentPage = Number($("#pagination button[aria-current='page']").data("page"));
+                loadAllChuky(currentPage);
             }
-
 
         },
         error: function (error) {
@@ -216,11 +185,11 @@ $(document).ready(function () {
         loadAllChuky(1, status, txtSearch);
     });
 
-    $("#search-keyword").on("input", function () {
+    $("#btn-search").on("click", function () {
         const txtSearch = $("#search-keyword").val().trim();
         const selectedValue = $("#select-status").val();
         const status = selectedValue == -1 ? null : selectedValue;
-        loadAllChuky(1, status, txtSearch);
+        loadAllChuky(1, status, txtSearch); 
     });
 
 
@@ -268,7 +237,6 @@ $(document).ready(function () {
     });
 
     $("#pagination").on("click", ".btn-page", function () {
-        const txtSearch = $("#search-keyword").val().trim();
         const currentPage = Number($("#pagination button[aria-current='page']").data("page"));
         const selectedPage = Number($(this).data("page"));
         const selectedValue = $("#select-status").val();
@@ -276,11 +244,10 @@ $(document).ready(function () {
         if (currentPage == selectedPage) {
             return;
         }
-        loadAllChuky(selectedPage, status, txtSearch);
+        loadAllChuky(selectedPage, status);
     });
 
     $("#pagination").on("click", ".btn-prev", function () {
-        const txtSearch = $("#search-keyword").val().trim();
         let currentPage = Number($("#pagination button[aria-current='page']").data("page"));
         const selectedValue = $("#select-status").val();
         const status = selectedValue == -1 ? null : selectedValue;
@@ -290,11 +257,10 @@ $(document).ready(function () {
         }
         currentPage -= 1;
         console, log(currentPage);
-        loadAllChuky(currentPage, status, txtSearch);
+        loadAllChuky(currentPage, status);
     });
 
     $("#pagination").on("click", ".btn-next", function () {
-        const txtSearch = $("#search-keyword").val().trim();
         let currentPage = Number($("#pagination button[aria-current='page']").data("page"));
         const selectedValue = $("#select-status").val();
         const status = selectedValue == -1 ? null : selectedValue;
@@ -305,6 +271,6 @@ $(document).ready(function () {
         }
         currentPage += 1;
         console, log(currentPage);
-        loadAllChuky(currentPage, status, txtSearch);
+        loadAllChuky(currentPage, status);
     });
 });

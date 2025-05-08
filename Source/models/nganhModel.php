@@ -147,18 +147,11 @@ class NganhModel
         }
     }
 
-    public function isExist($ten_nganh, $nganh_id = null)
+    public function isExist($ten_nganh)
     {
         $conn = $this->db->getConnection();
-        $sql = "SELECT 1 FROM nganh WHERE ten_nganh = ?";
-        if ($nganh_id != null) {
-            $sql .= " AND nganh_id != ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("si", $ten_nganh, $nganh_id);
-        } else {
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("s", $ten_nganh);
-        }
+        $stmt = $conn->prepare("SELECT 1 FROM nganh WHERE ten_nganh = ?");
+        $stmt->bind_param("s", $ten_nganh);
         $stmt->execute();
         $result = $stmt->get_result();
 
