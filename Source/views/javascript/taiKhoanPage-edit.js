@@ -190,7 +190,7 @@ $(function () {
     if (quyenList != null) {
       quyenList.forEach((item) => {
         const isSelected =
-          item.ten_quyen == defaultData.ten_quyen ? "selected" : "";
+          item.quyen_id == defaultData.quyen_id ? "selected" : "";
         $("#select-quyen").append(
           `<option value='${item.quyen_id}' ${isSelected}>${item.ten_quyen}</option>`
         );
