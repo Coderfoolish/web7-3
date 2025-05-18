@@ -78,13 +78,13 @@ async function updateKhaoSat(data) {
       dataType: "json",
     });
     if (response.error) {
-      console.log("fect", response.error);
+      console.log("fect", response.message);
     }
     console.log("update", response);
     return response;
   } catch (error) {
     console.log(error);
-    console.log("loi  tao khao sat");
+    console.log("loi  sua khao sat");
     return false;
   }
 }
@@ -170,8 +170,8 @@ $(function () {
     const nganhList = await getAllNganh();
     const chuKiList = await getAllChuKi();
     const answerTypeList = await getAllTraLoi();
-    const surveyContent = await getSurveryContentQuestion(22);
-    console.log(surveyContent);
+    const surveyContent = await getSurveryContentQuestion(currentKsId);
+    console.log("loa noi dung ban dau",surveyContent);
 
     if (nhomKsList != null) {
       nhomKsList.map((item) => {
@@ -282,7 +282,6 @@ $(function () {
     const surveyContainer = document.getElementById("survey-container");
     const btnAddSection = document.getElementById("btn-add-question");
     const submitSurveyButton = document.getElementById("btn-save-ks");
-
     loadSurveyContent(surveyContent, surveyContainer);
 
     btnAddSection.addEventListener("click", () => {
@@ -339,7 +338,7 @@ $(function () {
           section.questions = [];
         }
       });
-      console.log(surveyContent);
+      console.log("submit survey content",surveyContent);
       const editSurveyData = {
         "ks-id": currentKsId,
         "ten-ks": tenKhaoSat,
@@ -347,7 +346,7 @@ $(function () {
         "date-start": dateStart,
         "date-end": dateEnd,
         "loai-tra-loi": loaiTraLoi,
-        content: surveyContent,
+        "content": surveyContent,
         "su-dung": isSuDung,
       };
       console.log(editSurveyData);
@@ -410,6 +409,7 @@ $(function () {
               "Nếu cập nhật sẽ mất kết quả của bài khảo sát cũ (nếu có) ??"
             )
           ) {
+            
             //xu ly update
             updateKhaoSat(editSurveyData).then((response) => {
               if (response) {
@@ -425,12 +425,11 @@ $(function () {
                   html: "Cập nhật thất bại",
                   icon: "warning",
                 });
-                alert("");
               }
-            });
-          }
+            });       
+          }          
         });
-      }
+      }       
     });
   })();
 });
@@ -474,6 +473,8 @@ function createSection(sectionData = {}, isSubsection = false) {
   btnAddSubSection.addEventListener("click", () => {
     const subSec = createSection({}, true);
     subSectionContainer.appendChild(subSec);
+    // ẩn nút thêm mục con nếu có câu hỏi
+    btnAddQuestion.style.display = "none";
   });
   if (isSubsection) {
     btnAddSubSection.style.display = "none"; // mục con không cho thêm mục con
@@ -484,8 +485,22 @@ function createSection(sectionData = {}, isSubsection = false) {
   deleteSectionButton.textContent = isSubsection ? "Xóa mục" : "Xóa mục cha";
   deleteSectionButton.classList.add("btn", "btn-error", "btn-sm");
   deleteSectionButton.addEventListener("click", () => {
+    const parentSection = section.parentElement.closest(".section");
     section.remove();
+
+    // Nếu là mục con và sau khi xóa không còn mục con nào nữa
+    if (isSubsection && parentSection) {
+      const remainingSub = parentSection.querySelectorAll(
+        ":scope > .sub-section-container > .section"
+      );
+      if (remainingSub.length === 0) {
+        const btnAddQuestion =
+          parentSection.querySelector("button.btn-primary");
+        if (btnAddQuestion) btnAddQuestion.style.display = "inline-block";
+      }
+    }
   });
+
   section.appendChild(deleteSectionButton);
 
   // Add existing questions if any
@@ -538,6 +553,7 @@ function createQuestion(questionContainer, questionText = "") {
   });
 }
 function loadSurveyContent(data, container) {
+  if( data == null) { console.log('data null'); return;}
   data.forEach((sectionData) => {
     const sectionEl = createSection(
       {

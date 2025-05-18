@@ -156,7 +156,8 @@ if (isset($_POST['func'])) {
             if (!isset($ksId)) {
                 echo json_encode([
                     "status" => "error",
-                    "message" =>"Don't have right input"]);
+                    "message" => "Don't have right input"
+                ]);
                 exit;
             }
             $sections = $mucKhaoSatModel->getMucKhaoSatByKsId($ksId);
@@ -202,18 +203,12 @@ if (isset($_POST['func'])) {
             // echo json_encode($mockSurveyContent, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
             $response = $mockSurveyContent;
-            if ($mockSurveyContent == null) {
-                echo json_encode([
-                    "status" => "error",
-                    "message" => "error in getSurveyContentBySurveyId khaosatcontroller"
-                ]);
-            } else {
-                echo json_encode([
-                    "status" => "success",
-                    "data" => $mockSurveyContent
-                ]);
+            echo json_encode([
+                "status" => "success",
+                "data" => $mockSurveyContent
+            ]);
 
-            }
+
             exit;
         case "updateKhaoSat":
             if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
@@ -234,23 +229,43 @@ if (isset($_POST['func'])) {
                         $data["ctdt-id"],
                         1
                     );
+                    $ksIdHienTai = $data["ks-id"];
                     if ($isUpdateSuccess) {
                         //delete old section and question
-                        $oldMucKs = $mucKhaoSatModel->getMucKhaoSatByKsId($data["ks-id"]);
+                        $oldMucKs = $mucKhaoSatModel->getMucKhaoSatByKsId($ksIdHienTai);
                         foreach ($oldMucKs as $oldMucKsItem) {
                             $mucKhaoSatModel->delete($oldMucKsItem["mks_id"]);
                             $cauHoiModel->deleteByMksId($oldMucKsItem["mks_id"]);
                         }
                         //tao lại nội dung mới
-                        $parrentMucArray = $data["content"];
-                        foreach ($parrentMucArray as $mucItem) {
-                            $newMucId = $mucKhaoSatModel->create($mucItem["sectionName"], $data["ks-id"]);
+                        $parentMucArray = $data["content"];
+                        if (is_array($parentMucArray) == false) {
+                            echo json_encode([
+                                "status" => "error",
+                                "message" => "khong phai mang",
+                            ]);
+                            exit;
+                        }
+                        foreach ($parentMucArray as $mucItem) {
+                            //neu muc cha co cau hoi thi tao cau hoi, nguoc lai neu khong co thi kiem tra muc con
+                            $newMucId = $mucKhaoSatModel->create($mucItem["sectionName"], $ksIdHienTai);
                             $cauHoiArray = $mucItem["questions"];
-                            foreach ($cauHoiArray as $cauHoiItem) {
-                                $cauHoiModel->create($cauHoiItem, $newMucId);
+                            if (count($cauHoiArray) > 0) {
+                                foreach ($cauHoiArray as $cauHoiItem) {
+                                    $cauHoiModel->create($cauHoiItem, $newMucId);
+                                }
+                            } else {
+                                $subSectionsArray = $mucItem["subSections"];
+                                foreach ($subSectionsArray as $subSectionItem) {
+                                    $newSubSectionId = $mucKhaoSatModel->create($subSectionItem["sectionName"] ?? '', $ksIdHienTai, $newMucId); // Assuming subSectionItem might have a name
+                                    $cauHoiArray = $subSectionItem["questions"];
+                                    foreach ($cauHoiArray as $cauHoiItem) {
+                                        $cauHoiModel->create($cauHoiItem, $newSubSectionId);
+                                    }
+                                }
                             }
                         }
-
+                        
                     }
                     $response = $isUpdateSuccess;
                 } else {

@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../models/SurveyModel.php';
 require_once __DIR__ . '/../../models/loaiTraLoiModel.php';
 $surveyModel = new SurveyModel();
 
-$answerType = new TraLoiModel();
+$answerType = new LoaiTraLoiModel();
 
 // $listSurveyFieldAndQuestion = json_decode($surveyModel->getSurveyFieldAndQuestion($listEx), true);
 
