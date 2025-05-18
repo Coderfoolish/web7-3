@@ -18,42 +18,52 @@ function isExistsParent($mks_id) {
 
 function genTable($mks_id, $isParent, $stt) {
     global $surveyModel;
-    // global $answerType;
     global $typeScore;
     $listSurveyFieldAndQuestion = json_decode($surveyModel->getSurveyFieldAndQuestion($mks_id, $isParent), true);
+
+    $colSpanScore = $typeScore['thang_diem'];
     
-    echo ' <div class="border-base-content/25 w-full rounded-lg border">
-                <table class="table">';
-        echo    '<tr>
-                    <th class="normal-case w-1/2">Nội dung khảo sát</th>
-                    <th class="normal-case w-1/2 text-center" colspan="10">Mực độ hài lòng</th>
-                    </tr>';
-        $sttSurveyField = 1;
-        foreach ($listSurveyFieldAndQuestion as $surveyField) {
-            $phanSo = 1 / 2 / $typeScore['thang_diem'];
-            echo    '<tr>
-                            <th class="normal-case w-1/2 font-semibold">' . $stt . '.' . $sttSurveyField . '. ' . $surveyField['ten_muc'] . '</th>
-                    ';
-            for ($i = 1; $i <= $typeScore['thang_diem']; $i++) {
-                echo '<th class="normal-case w-1/' . $phanSo . ' text-center">' . $i . '</th>';
+    echo '<div class="border-base-content/25 w-full rounded-lg border">
+            <table class="table w-full border-collapse">
+                <thead>
+                    <tr>
+                        <th class="text-center align-middle border border-base-content/25 w-1/2" rowspan="2">Nội dung khảo sát</th>
+                        <th class="text-center border border-base-content/25" colspan="' . $colSpanScore . '">Mức độ hài lòng</th>
+                    </tr>
+                    <tr>';
+                        for ($i = 1; $i <= $colSpanScore; $i++) {
+                            echo '<th class="text-center border border-base-content/25">' . $i . '</th>';
+                        }
+    echo       '</tr>
+                </thead>
+                <tbody>';
+    
+    $sttSurveyField = 1;
+    foreach ($listSurveyFieldAndQuestion as $surveyField) {
+        if ($isParent) {
+            echo '<tr>
+                    <td class="font-semibold border border-base-content/25" colspan="' . ($colSpanScore + 1) . '">' . $stt . '.' . $sttSurveyField . '. ' . $surveyField['ten_muc'] . '</td>
+                  </tr>';
+
+        }
+
+        foreach ($surveyField['cau_hoi'] as $question) {
+            echo '<tr>
+                    <td class="border border-base-content/25" name="txt-' . $question['ch_id'] . '">' . $question['noi_dung'] . '</td>';
+            for ($i = 1; $i <= $colSpanScore; $i++) {
+                echo '<td class="text-center border border-base-content/25">
+                        <input type="radio" name="radio-' . $question['ch_id'] . '" value="' . $i . '" class="radio radio-primary" />
+                      </td>';
             }
             echo '</tr>';
-            foreach ($surveyField['cau_hoi'] as $question) {
-                echo    '<tr>
-                                <td name="txt-' . $question['ch_id'] . '">' . $question['noi_dung'] . '</td>
-                        ';
-                for ($i = 1; $i <= $typeScore['thang_diem']; $i++) {
-                    echo '<td class="text-center"><input type="radio" name="radio-' . $question['ch_id'] . '" value=' . $i . ' class="radio radio-primary" /></td>';
-                }
-                echo '</tr>';
-            }
-            $sttSurveyField++;
         }
-    
-    echo '</table>
-        </div>';
 
+        $sttSurveyField++;
+    }
+
+    echo '</tbody></table></div>';
 }
+
 
 function genNote() {
     global $typeScore;

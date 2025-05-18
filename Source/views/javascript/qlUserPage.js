@@ -330,6 +330,17 @@ $(function () {
 
   $("#form-send-mail").on("submit", function (e) {
     e.preventDefault(); 
+
+    Swal.fire({
+        title: 'Đang xử lý...',
+        text: 'Vui lòng chờ trong giây lát',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+
     const objectSelect = $("#nhom-ks-select-modal").val();
     const subject = $("input[name='subject-text']").val();
     const body = $("textarea[name='body-text']").val();
@@ -342,7 +353,7 @@ $(function () {
     formData.append("attachment", file);
     formData.append("func", "sendMail");
 
-    console.log(formData);
+    
 
     $.ajax({
       url: "./controller/UserController.php",
