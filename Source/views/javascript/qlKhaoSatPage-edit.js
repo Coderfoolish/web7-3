@@ -212,7 +212,7 @@ $(function () {
           `<option ${
             defaultData.ltl_id == item.ltl_id ? 'selected="selected" ' : ""
           }  
-              value='${item.ltl_id}'>${item.thang_diem}</option>`
+              value='${item.ltl_id}'>${item.thang_diem}: ${item.mota}</option>`
         );
       });
     }
