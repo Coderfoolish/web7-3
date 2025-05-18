@@ -61,7 +61,7 @@ async function getAllTraLoi() {
     if (response.error) {
       console.log("fect", response.error);
     }
-    console.log("fect", response);
+    console.log("loai tra loi", response);
     return response;
   } catch (error) {
     console.log(error);
@@ -175,7 +175,7 @@ $(function () {
     if (answerTypeList != null) {
       answerTypeList.map((item) => {
         $("#select-loai-tra-loi").append(
-          `<option value='${item.ltl_id}'>${item.thang_diem}</option>`
+          `<option value='${item.ltl_id}'>${item.thang_diem}: ${item.mota}</option>`
         );
       });
     }
