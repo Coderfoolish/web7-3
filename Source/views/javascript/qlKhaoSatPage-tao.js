@@ -225,6 +225,27 @@ $(function () {
         nhomKsDropdown.classList.add("hidden");
       }
     });
+    //xu ly chuyen file thanh json va load len giao dien
+    const fileInput = document.getElementById("input-file-survery-content");
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files[0];
+
+      if (!file) {
+        console.log("Chưa có file nào được nhập.");
+        return;
+      }
+
+      console.log("Đã có file được nhập.");
+
+      try {
+        const json = await excelToJSON(file);
+        console.log(json);
+        console.log("load excel");
+        loadSurveyContent(json, surveyContainer)
+      } catch (error) {
+        console.error("Lỗi khi đọc file Excel:", error);
+      }
+    });
 
     // xua li tao bai noi dung khao sat
     const surveyContainer = document.getElementById("survey-container");
@@ -256,8 +277,6 @@ $(function () {
       const chuKi = $("#select-chu-ki").val();
       const loaiKs = $("#select-ks-type").val();
       const isSuDung = $("#select-su-dung").val();
-      const fileInput = document.getElementById("input-file-survery-content");
-      const file = fileInput.files[0];
 
       function parseSection(sectionEl) {
         const sectionName = sectionEl.querySelector("input").value;
@@ -351,12 +370,9 @@ $(function () {
           formData.append("su-dung", isSuDung);
           formData.append("ctdt-id", isExistCtdt);
 
-          if (file) {
-            formData.append("excelFile", file);
-          } else {
-            formData.append("content", surveyContent);
-            formData.append("content", JSON.stringify(surveyContent));
-          }
+          formData.append("content", surveyContent);
+          formData.append("content", JSON.stringify(surveyContent));
+
           console.log(surveyContent);
           createKhaoSat(formData);
         });
@@ -480,5 +496,150 @@ function createQuestion(questionContainer, questionText = "") {
         }
       });
     }
+  });
+}
+function excelToJSON(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      reject("Không có file");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      try {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+        const merges = sheet["!merges"] || [];
+        const json = [];
+
+        let sectionIdCounter = 1;
+        let questionIdCounter = 1;
+        const startCol = 1;
+
+        for (let col = startCol; ; col++) {
+          const colLetter = XLSX.utils.encode_col(col);
+          const parentCell = sheet[`${colLetter}1`];
+          if (!parentCell) break;
+
+          const parentName = parentCell.v;
+          const parentRange = merges.find((m) => m.s.c === col && m.s.r === 0);
+          let colSpan = parentRange ? parentRange.e.c - parentRange.s.c + 1 : 1;
+
+          if (colSpan === 1) {
+            // Mục cha không có mục con
+            const questions = [];
+            let row = 3;
+            while (true) {
+              const cell = sheet[`${colLetter}${row}`];
+              const noteCell = sheet[`A${row}`];
+              if (!cell) break;
+              questions.push({
+                questionId: questionIdCounter++,
+                sectionId: sectionIdCounter,
+                questionContent: cell.v,
+                note: noteCell?.v || "",
+              });
+              row++;
+            }
+
+            json.push({
+              sectionId: sectionIdCounter++,
+              sectionParentId: null,
+              sectionName: parentName,
+              questions,
+              subSections: [],
+            });
+          } else {
+            // Mục cha có mục con
+            const subSections = [];
+
+            for (let i = 0; i < colSpan; i++) {
+              const subCol = col + i;
+              const subColLetter = XLSX.utils.encode_col(subCol);
+              const subSectionName = sheet[`${subColLetter}2`]?.v;
+              const questions = [];
+              let row = 3;
+
+              while (true) {
+                const cell = sheet[`${subColLetter}${row}`];
+                const noteCell = sheet[`A${row}`];
+                if (!cell) break;
+                questions.push({
+                  questionId: questionIdCounter++,
+                  sectionId: sectionIdCounter,
+                  questionContent: cell.v,
+                  note: noteCell?.v || "",
+                });
+                row++;
+              }
+
+              subSections.push({
+                sectionId: sectionIdCounter,
+                sectionParentId: sectionIdCounter - i - 1,
+                sectionName: subSectionName,
+                questions,
+                subSections: [],
+              });
+
+              sectionIdCounter++;
+            }
+
+            json.push({
+              sectionId: sectionIdCounter++,
+              sectionParentId: null,
+              sectionName: parentName,
+              questions: [],
+              subSections,
+            });
+
+            col += colSpan - 1;
+          }
+        }
+
+        resolve(json);
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    reader.onerror = function (err) {
+      reject(err);
+    };
+
+    reader.readAsArrayBuffer(file);
+  });
+}
+function loadSurveyContent(data, container) {
+  if( data == null) { console.log('data null'); return;}
+  data.forEach((sectionData) => {
+    const sectionEl = createSection(
+      {
+        ten_muc: sectionData.sectionName,
+        cau_hoi: (sectionData.questions || []).map((q) => ({
+          noi_dung: q.questionContent,
+        })),
+      },
+      false
+    );
+
+    if (sectionData.subSections && sectionData.subSections.length > 0) {
+      const subContainer = sectionEl.querySelector(".sub-section-container");
+      sectionData.subSections.forEach((subSectionData) => {
+        const subEl = createSection(
+          {
+            ten_muc: subSectionData.sectionName,
+            cau_hoi: (subSectionData.questions || []).map((q) => ({
+              noi_dung: q.questionContent,
+            })),
+          },
+          true
+        );
+        subContainer.appendChild(subEl);
+      });
+    }
+    container.appendChild(sectionEl);
   });
 }
