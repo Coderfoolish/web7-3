@@ -6,7 +6,7 @@
         </div>
         <div class="flex items-center gap-4">
             <div>
-                <button id="excel" class="btn btn-primary view-survey hidden">Xuất Excel</button>
+                <button id="excel" class="btn btn-primary view-survey hidden">Xuất Excel danh sách</button>
             </div>
             <div>
                 <button id="pdf" class="btn btn-primary view-survey hidden">Xuất Báo cáo</button>

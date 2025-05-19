@@ -136,6 +136,99 @@ async function getAllByNhomKs(nhom_ks) {
     }
 }
 
+function taoBangThongKeTheoLoaiDT(ch, khaoSat, doiTuongs, doiTuongThamGias, loaiDoiTuongs, traLoi) {
+    const container = document.createElement('div');
+    container.className = 'mt-4';
+
+    const title = document.createElement('h4');
+    title.textContent = ch.noi_dung;
+    title.className = 'font-semibold text-md mt-2';
+    container.appendChild(title);
+
+    const table = document.createElement('table');
+    table.className = 'table-auto border-collapse border border-black w-full mt-2';
+
+    // Header
+    table.innerHTML = `
+        <thead>
+            <tr class="bg-gray-100">
+                <th class="border border-black px-2">Đối tượng</th>
+                <th class="border border-black px-2">Tổng số</th>
+                <th class="border border-black px-2">Tham gia</th>
+                <th class="border border-black px-2">Trung bình</th>
+            </tr>
+        </thead>
+    `;
+
+    const tbody = document.createElement('tbody');
+
+    let tongSo = 0, tongThamGia = 0, tongDiem = 0;
+
+    loaiDoiTuongs.forEach(loai => {
+        const dt_id = loai.dt_id;
+
+        console.log(dt_id);
+        console.log(doiTuongs);
+        const tong = doiTuongs.filter(dt => String(dt.loai_dt_id) === String(dt_id)).length;
+        console.log(tong);
+        if (tong == 0) {
+            return;
+        }
+        const thamGia = doiTuongThamGias.filter(dt => String(dt.loai_dt_id) === String(dt_id));
+        console.log(thamGia);
+        const thamGiaIds = new Set(thamGia.map(dt => dt.nguoi_lamks_id));
+
+        let tongDiemDT = 0;
+        let soThamGiaDT = 0;
+
+        traLoi.forEach(tl => {
+            if (tl.ch_id === ch.ch_id && thamGiaIds.has(tl.nguoi_lamks_id)) {
+                tongDiemDT += parseFloat(tl.ket_qua || 0);
+                soThamGiaDT++;
+            }
+        });
+
+        const trungBinh = soThamGiaDT > 0 ? (tongDiemDT / soThamGiaDT).toFixed(2) : '0.00';
+
+        tongSo += tong;
+        tongThamGia += soThamGiaDT;
+        tongDiem += tongDiemDT;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="border border-black px-2">${loai.ten_dt}</td>
+            <td class="border border-black px-2 text-center">${tong}</td>
+            <td class="border border-black px-2 text-center">${soThamGiaDT}</td>
+            <td class="border border-black px-2 text-center">${trungBinh}</td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    // Dòng tổng
+    const tbAll = tongThamGia > 0 ? (tongDiem / tongThamGia).toFixed(2) : '0.00';
+    const rowTong = document.createElement('tr');
+    rowTong.className = 'font-semibold';
+    rowTong.innerHTML = `
+        <td class="border border-black px-2">Tổng / Trung bình</td>
+        <td class="border border-black px-2 text-center">${tongSo}</td>
+        <td class="border border-black px-2 text-center">${tongThamGia}</td>
+        <td class="border border-black px-2 text-center">${tbAll}</td>
+    `;
+    tbody.appendChild(rowTong);
+
+    table.appendChild(tbody);
+    container.appendChild(table);
+
+    // Thêm ô nhận xét
+    const nhanXet = document.createElement('textarea');
+    nhanXet.className = 'w-full border border-gray-300 mt-2 p-2 rounded';
+    nhanXet.placeholder = 'Nhận xét...';
+    container.appendChild(nhanXet);
+
+    return container;
+}
+
+
 async function loadDuLieu(ks_id) {
 
     // 0. Lấy chi tiết khảo sát
@@ -205,7 +298,9 @@ async function loadDuLieu(ks_id) {
         const key = String(item.dt_id);
         const tong = tongPhieuTheoLoaiDT.get(key) || 0;
         const thamgia = thamGiaTheoLoaiDT.get(key) || 0;
-
+        if (tong == 0) {
+            return;
+        }
         const p = document.createElement('p');
         p.className = "mt-2 text-md font-medium text-gray-700";
         p.innerHTML = `<strong>${item.ten_dt}:</strong> Tổng phiếu: <span>${tong}</span>, Tham gia: <span>${thamgia}</span>`;
@@ -282,61 +377,39 @@ async function loadDuLieu(ks_id) {
     // Duyệt các mục cha
     const mucChaList = mksTheoCha.get('root') || [];
     mucChaList.forEach((mucCha, indexMuc) => {
-        // Tạo tiêu đề cho mục cha
         const tieude = document.createElement('h3');
         tieude.textContent = mucCha.ten_muc;
         tieude.style.marginTop = '30px';
         tieude.style.fontWeight = 'bold';
         ketQuaList.appendChild(tieude);
 
-        // Tạo bảng mới
-        const tableContainer = document.createElement('div');
-        const table = document.createElement('table');
-        table.classList.add('table', 'table-striped', 'w-full', 'mb-4', 'border-collapse', 'border', 'border-black', 'mt-2');
-
-        // Header bảng
-        const thead = document.createElement('thead');
-        const headRow1 = document.createElement('tr');
-        headRow1.innerHTML = `<th rowspan=2 class="border border-black">Nội dung</th>
-                              <th class="text-center border border-black" colspan=${khaoSat.thang_diem}>${khaoSat.ltl_mota}</th>`;
-        thead.appendChild(headRow1);
-        const headRow2 = document.createElement('tr');
-        headRow2.innerHTML = Array.from({ length: khaoSat.thang_diem }, (_, i) => `<th class="text-center border border-black">${i + 1}</th>`).join('');
-        thead.appendChild(headRow2);
-        table.appendChild(thead);
-
-        // Body bảng
-        const tbody = document.createElement('tbody');
-        table.appendChild(tbody);
-
         const mucConList = mksTheoCha.get(mucCha.mks_id) || [];
 
         if (mucConList.length > 0) {
-            // Có mục con
-            mucConList.forEach(mucCon => {
-                const row = document.createElement('tr');
-                const td = document.createElement('td');
-                td.textContent = `${indexMuc + 1}. ${mucCon.ten_muc}`;
-                td.colSpan = khaoSat.thang_diem + 1;
-                td.style.fontWeight = 'bold';
-                td.style.paddingLeft = '10px';
-                row.appendChild(td);
-                tbody.appendChild(row);
+            mucConList.forEach((mucCon, indexMucCon) => {
+                const subTitle = document.createElement('h4');
+                subTitle.textContent = `${indexMuc + 1}.${indexMucCon + 1} ${mucCon.ten_muc}`;
+                subTitle.style.marginTop = '15px';
+                subTitle.style.fontWeight = 'bold';
+                ketQuaList.appendChild(subTitle);
 
                 const relatedQuestions = cauHoiTheoMks.get(mucCon.mks_id) || [];
                 relatedQuestions.forEach((ch, indexCH) => {
-                    tbody.appendChild(taoDongCauHoi(ch, `${indexMuc + 1}.${indexCH + 1}.`));
+                    const bangTK = taoBangThongKeTheoLoaiDT(
+                        ch, khaoSat, doiTuongs, doiTuongThamGias, loaiDoiTuongs, traLoi
+                    );
+                    ketQuaList.appendChild(bangTK);
                 });
             });
         } else {
-            // Không có mục con → render trực tiếp câu hỏi
             const relatedQuestions = cauHoiTheoMks.get(mucCha.mks_id) || [];
             relatedQuestions.forEach((ch, indexCH) => {
-                tbody.appendChild(taoDongCauHoi(ch, `${indexMuc + 1}.${indexCH + 1}.`));
+                const bangTK = taoBangThongKeTheoLoaiDT(
+                    ch, khaoSat, doiTuongs, doiTuongThamGias, loaiDoiTuongs, traLoi
+                );
+                ketQuaList.appendChild(bangTK);
             });
         }
-        tableContainer.appendChild(table);
-        ketQuaList.appendChild(tableContainer);
     });
 
 }
