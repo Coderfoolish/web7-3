@@ -1,3 +1,5 @@
+window.HSStaticMethods.autoInit();
+
 async function getKhaoSatById(ks_id) {
     try {
         const response = await $.ajax({
@@ -136,9 +138,105 @@ async function getAllByNhomKs(nhom_ks) {
     }
 }
 
+function taoBangThongKeTheoLoaiDT(ch, doiTuongThamGias, loaiDoiTuongs, traLoi, tongPhieuTheoLoaiDT, thamGiaTheoLoaiDT) {
+    const container = document.createElement('div');
+    container.className = 'mt-4';
+
+    const title = document.createElement('h4');
+    title.textContent = ch.noi_dung;
+    title.className = 'font-semibold text-md mt-2';
+    container.appendChild(title);
+
+    const table = document.createElement('table');
+    table.className = 'table-auto border-collapse border border-black w-full mt-2';
+
+    // Header
+    table.innerHTML = `
+        <thead>
+            <tr class="bg-gray-100">
+                <th class="border border-black px-2">Đối tượng</th>
+                <th class="border border-black px-2">Tổng số</th>
+                <th class="border border-black px-2">Tham gia</th>
+                <th class="border border-black px-2">Trung bình</th>
+            </tr>
+        </thead>
+    `;
+
+    const tbody = document.createElement('tbody');
+
+    let tongSo = 0, tongThamGia = 0, tongDiem = 0;
+
+    loaiDoiTuongs.forEach(loai => {
+        const dt_id = String(loai.dt_id);
+
+        const tong = tongPhieuTheoLoaiDT.get(dt_id) || 0;
+        if (tong === 0) return;
+
+        const thamGiaDTs = doiTuongThamGias.filter(dt => String(dt.loai_dt_id) === dt_id);
+        const thamGiaIds = new Set(thamGiaDTs.map(dt => dt.nguoi_lamks_id));
+        const soThamGiaDT = thamGiaTheoLoaiDT.get(dt_id) || 0;
+
+        let tongDiemDT = 0;
+        traLoi.forEach(tl => {
+            if (tl.ch_id === ch.ch_id && thamGiaIds.has(tl.nguoi_lamks_id)) {
+                tongDiemDT += parseFloat(tl.ket_qua || 0);
+            }
+        });
+
+        const trungBinh = soThamGiaDT > 0 ? (tongDiemDT / soThamGiaDT).toFixed(2) : '0.00';
+
+        tongSo += tong;
+        tongThamGia += soThamGiaDT;
+        tongDiem += tongDiemDT;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="border border-black px-2">${loai.ten_dt}</td>
+            <td class="border border-black px-2 text-center">${tong}</td>
+            <td class="border border-black px-2 text-center">${soThamGiaDT}</td>
+            <td class="border border-black px-2 text-center">${trungBinh}</td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    // Dòng tổng
+    const tbAll = tongThamGia > 0 ? (tongDiem / tongThamGia).toFixed(2) : '0.00';
+    const rowTong = document.createElement('tr');
+    rowTong.className = 'font-semibold';
+    rowTong.innerHTML = `
+        <td class="border border-black px-2">Tổng / Trung bình</td>
+        <td class="border border-black px-2 text-center">${tongSo}</td>
+        <td class="border border-black px-2 text-center">${tongThamGia}</td>
+        <td class="border border-black px-2 text-center">${tbAll}</td>
+    `;
+    tbody.appendChild(rowTong);
+
+    table.appendChild(tbody);
+    container.appendChild(table);
+
+    // Thêm label cho ô Góp ý
+    const label = document.createElement('label');
+    label.textContent = 'Góp ý:';
+    label.className = 'block mt-4 font-semibold';
+    label.htmlFor = 'gop_y';
+
+    // Thêm ô Góp ý
+    const nhanXet = document.createElement('textarea');
+    nhanXet.id = 'gop_y';
+    nhanXet.className = 'w-full border border-gray-300 mt-2 p-2 rounded';
+    nhanXet.placeholder = 'Góp ý...';
+
+    // Thêm vào container
+    container.appendChild(label);
+    container.appendChild(nhanXet);
+
+    return container;
+}
+
+
 async function loadDuLieu(ks_id) {
 
-    // 0. Lấy chi tiết khảo sát
+    // Lấy chi tiết khảo sát
     const khaoSat = await getKhaoSatById(ks_id);
     if (khaoSat?.status === false && khaoSat?.message) {
         Swal.fire({
@@ -150,21 +248,20 @@ async function loadDuLieu(ks_id) {
     }
 
     document.getElementById('ks-ten').textContent = khaoSat.ten_ks || 'Không rõ';
-    document.getElementById('ks-thangdiem').textContent = khaoSat.thang_diem || 'Chưa có';
     document.getElementById('ks-ngaybatdau').textContent = khaoSat.ngay_bat_dau || 'Chưa có';
     document.getElementById('ks-ngayketthuc').textContent = khaoSat.ngay_ket_thuc || 'Chưa có';
     document.getElementById('ks-nganh').textContent = khaoSat.ten_nganh || 'Chưa có';
     document.getElementById('ks-chuky').textContent = khaoSat.ten_ck || 'Chưa có';
     document.getElementById('ks-nhom').textContent = khaoSat.ten_nks || 'Chưa có';
 
-    // 1. Lấy danh sách mục khảo sát
+    // Lấy danh sách mục khảo sát
     const mucKhaoSat = await getAllMucKhaoSat(ks_id);
     const mks_ids = mucKhaoSat.map(item => item.mks_id);
 
-    // 2. Lấy danh sách câu hỏi theo mks_ids
+    // Lấy danh sách câu hỏi theo mks_ids
     const cauHoi = await getAllCauHoi(mks_ids);
 
-    // 3. Lấy kết quả khảo sát
+    // Lấy kết quả khảo sát
     const kqks = await getAllKqks(ks_id);
     const kqks_ids = kqks.data.map(item => item.kqks_id);
     const doiTuong_Ids = kqks.data.map(item => item.nguoi_lamks_id);
@@ -205,15 +302,20 @@ async function loadDuLieu(ks_id) {
         const key = String(item.dt_id);
         const tong = tongPhieuTheoLoaiDT.get(key) || 0;
         const thamgia = thamGiaTheoLoaiDT.get(key) || 0;
-
+        if (tong == 0) {
+            return;
+        }
         const p = document.createElement('p');
         p.className = "mt-2 text-md font-medium text-gray-700";
         p.innerHTML = `<strong>${item.ten_dt}:</strong> Tổng phiếu: <span>${tong}</span>, Tham gia: <span>${thamgia}</span>`;
         thongKeKhaoSat.appendChild(p);
     });
 
-    // 4. Lấy danh sách trả lời
+    // Lấy danh sách trả lời
     const traLoi = await getAllTraLoi(kqks_ids);
+
+    // loai tra loi
+    document.getElementById('ks-ltl').textContent = `${khaoSat.thang_diem} - ${khaoSat.ltl_mota}`;
 
     const ltlContainer = document.getElementById("ltl-container");
 
@@ -232,11 +334,10 @@ async function loadDuLieu(ks_id) {
         ltlContainer.appendChild(section);
     });
 
-    // 5. Tạo nội dung bảng
+    // Tạo nội dung bảng
     const ketQuaList = document.getElementById('ketqua-list');
     ketQuaList.innerHTML = '';
 
-    // Gom dữ liệu vào Map như trước
     const mksTheoCha = new Map();
     mucKhaoSat.forEach(mks => {
         const parentId = mks.parent_mks_id || 'root';
@@ -260,83 +361,44 @@ async function loadDuLieu(ks_id) {
         traLoiTheoCauHoi.set(key, (traLoiTheoCauHoi.get(key) || 0) + 1);
     });
 
-    function taoDongCauHoi(ch, prefix = '') {
-        const row = document.createElement('tr');
-        row.classList.add('hover');
-
-        const cauHoiTd = document.createElement('td');
-        cauHoiTd.textContent = `${prefix} ${ch.noi_dung}`;
-        row.appendChild(cauHoiTd);
-
-        for (let diem = 1; diem <= khaoSat.thang_diem; diem++) {
-            const count = traLoiTheoCauHoi.get(`${ch.ch_id}-${diem}`) || 0;
-            const td = document.createElement('td');
-            td.textContent = count;
-            td.classList.add("text-center");
-            row.appendChild(td);
-        }
-
-        return row;
-    }
-
     // Duyệt các mục cha
     const mucChaList = mksTheoCha.get('root') || [];
     mucChaList.forEach((mucCha, indexMuc) => {
-        // Tạo tiêu đề cho mục cha
         const tieude = document.createElement('h3');
         tieude.textContent = mucCha.ten_muc;
         tieude.style.marginTop = '30px';
         tieude.style.fontWeight = 'bold';
         ketQuaList.appendChild(tieude);
 
-        // Tạo bảng mới
-        const tableContainer = document.createElement('div');
-        const table = document.createElement('table');
-        table.classList.add('table', 'table-striped', 'w-full', 'mb-4', 'border-collapse', 'border', 'border-black', 'mt-2');
-
-        // Header bảng
-        const thead = document.createElement('thead');
-        const headRow1 = document.createElement('tr');
-        headRow1.innerHTML = `<th rowspan=2 class="border border-black">Nội dung</th>
-                              <th class="text-center border border-black" colspan=${khaoSat.thang_diem}>${khaoSat.ltl_mota}</th>`;
-        thead.appendChild(headRow1);
-        const headRow2 = document.createElement('tr');
-        headRow2.innerHTML = Array.from({ length: khaoSat.thang_diem }, (_, i) => `<th class="text-center border border-black">${i + 1}</th>`).join('');
-        thead.appendChild(headRow2);
-        table.appendChild(thead);
-
-        // Body bảng
-        const tbody = document.createElement('tbody');
-        table.appendChild(tbody);
-
         const mucConList = mksTheoCha.get(mucCha.mks_id) || [];
 
         if (mucConList.length > 0) {
-            // Có mục con
-            mucConList.forEach(mucCon => {
-                const row = document.createElement('tr');
-                const td = document.createElement('td');
-                td.textContent = `${indexMuc + 1}. ${mucCon.ten_muc}`;
-                td.colSpan = khaoSat.thang_diem + 1;
-                td.style.fontWeight = 'bold';
-                td.style.paddingLeft = '10px';
-                row.appendChild(td);
-                tbody.appendChild(row);
+            mucConList.forEach((mucCon, indexMucCon) => {
+                const subTitle = document.createElement('h4');
+                subTitle.textContent = `${indexMuc + 1}.${indexMucCon + 1} ${mucCon.ten_muc}`;
+                subTitle.style.marginTop = '15px';
+                subTitle.style.fontWeight = 'bold';
+                ketQuaList.appendChild(subTitle);
 
                 const relatedQuestions = cauHoiTheoMks.get(mucCon.mks_id) || [];
                 relatedQuestions.forEach((ch, indexCH) => {
-                    tbody.appendChild(taoDongCauHoi(ch, `${indexMuc + 1}.${indexCH + 1}.`));
+                    const bangTK = taoBangThongKeTheoLoaiDT(
+                        ch, doiTuongThamGias, loaiDoiTuongs, traLoi, tongPhieuTheoLoaiDT, thamGiaTheoLoaiDT
+                    );
+
+                    ketQuaList.appendChild(bangTK);
                 });
             });
         } else {
-            // Không có mục con → render trực tiếp câu hỏi
             const relatedQuestions = cauHoiTheoMks.get(mucCha.mks_id) || [];
             relatedQuestions.forEach((ch, indexCH) => {
-                tbody.appendChild(taoDongCauHoi(ch, `${indexMuc + 1}.${indexCH + 1}.`));
+                const bangTK = taoBangThongKeTheoLoaiDT(
+                    ch, doiTuongThamGias, loaiDoiTuongs, traLoi, tongPhieuTheoLoaiDT, thamGiaTheoLoaiDT
+                );
+
+                ketQuaList.appendChild(bangTK);
             });
         }
-        tableContainer.appendChild(table);
-        ketQuaList.appendChild(tableContainer);
     });
 
 }
@@ -385,20 +447,35 @@ function xuatExel(ks_id) {
 }
 
 function printDiv() {
-    var divContents = document.getElementById("print-content").innerHTML;
-    var printWindow = window.open('', '', 'height=600,width=800');
+    const infoHTML = document.getElementById("print-info-khaosat")?.innerHTML || "";
+    const loaiTraLoiHTML = document.getElementById("print-loaitraloi-khaosat")?.innerHTML || "";
+    const ketQuaHTML = document.getElementById("print-ketqua-khaosat")?.innerHTML || "";
+    const khaoSatTitle = document.getElementById("ks-ten")?.innerText || "Kết quả khảo sát";
 
-    // Lấy toàn bộ thẻ <style> và <link> từ trang gốc
-    var styles = '';
-    document.querySelectorAll('link[rel="stylesheet"], style').forEach((style) => {
-        styles += style.outerHTML;
+    const printWindow = window.open('', '', 'height=600,width=800');
+
+    // Lấy toàn bộ <link rel="stylesheet"> và <style>
+    let styles = '';
+    document.querySelectorAll('link[rel="stylesheet"], style').forEach(el => {
+        styles += el.outerHTML;
     });
 
-    printWindow.document.write('<html>');
-    printWindow.document.write('<head><title>In nội dung</title>' + styles + '</head>');
-    printWindow.document.write('<body>');
-    printWindow.document.write('<div>' + divContents + '</div>');
-    printWindow.document.write('</body></html>');
+    const htmlContent = `
+        <html>
+            <head>
+                <title>${khaoSatTitle}</title>
+                ${styles}
+            </head>
+            <body>
+                <div>${infoHTML}</div>
+                <div>${loaiTraLoiHTML}</div>
+                <div>${ketQuaHTML}</div>
+            </body>
+        </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
     printWindow.document.close();
 
     printWindow.onload = function () {
@@ -407,7 +484,6 @@ function printDiv() {
         printWindow.close();
     };
 }
-
 $(document).ready(function () {
     const urlParams = new URLSearchParams(window.location.search);
     const ks_id = urlParams.get('id');

@@ -97,7 +97,8 @@ genNote();
                 }
             }
         ?>
-        
+
+
         
         <div class="flex items-center justify-end mb-4">
             <div class="flex items-center gap-8">
