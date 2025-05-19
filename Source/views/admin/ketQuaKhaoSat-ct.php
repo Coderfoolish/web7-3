@@ -14,7 +14,7 @@
         </div>
 
     </div>
-    <div id="print-content">
+    <div id="print-info-khaosat">
         <div id="info-khaosat" class="mb-4 p-5 border rounded-lg shadow-md">
             <div class="w-full flex flex-wrap wrap justify-center">
                 <p class="text-[20px] font-bold">Thông tin bài khảo sát</p>
@@ -36,15 +36,15 @@
 
         </div>
     </div>
-    <div class="fles flex-col">
+    <div id="print-loaitraloi-khaosat" class="fles flex-col">
         <div>
-            <p class="mt-2 text-md font-medium text-gray-700"><strong>Thang điểm: </strong> <span id="ks-thangdiem"></span></p>
+            <p class="mt-2 text-md font-medium text-gray-700"><strong>Loại trả lời: </strong> <span id="ks-ltl"></span></p>
         </div>
         <div class="w-full flex flex-wrap wrap justify-center gap-4" id="ltl-container">
 
         </div>
     </div>
-    <div class="w-full overflow-x-auto">
+    <div id="print-ketqua-khaosat" class="w-full overflow-x-auto">
         <div class="flex flex-col" id="ketqua-list">
 
         </div>
