@@ -50,6 +50,11 @@ if ($page) {
             require_once("../views/admin/qlUserPage.php");
             $response["html"] = ob_get_clean();
             break;
+        case "loaiDoiTuong":
+            ob_start();
+            require_once("../views/admin/LoaiDoiTuong.php");
+            $response["html"] = ob_get_clean();
+            break;
         case "chuky":
             ob_start();
             require_once("../views/admin/chuky.php");
@@ -79,7 +84,7 @@ if ($page) {
             ob_start();
             require_once("../views/user/userInfor.php");
             $response["html"] = ob_get_clean();
-            break;    
+            break;
         default:
             $response["html"] = `loi trang handle`;
             $response["error"] = "Invalid page requested.";
@@ -149,9 +154,21 @@ if ($act) {
             require_once($filePath);
             $response["html"] = ob_get_clean();
             break;
-         case "user-sua":
+        case "user-sua":
             ob_start();
             $filePath = "../views/admin/qlUserPage-edit.php";
+            require_once($filePath);
+            $response["html"] = ob_get_clean();
+            break;
+        case "LoaiDoiTuong-them":
+            ob_start();
+            $filePath = "../views/admin/LoaiDoiTuong-them.php";
+            require_once($filePath);
+            $response["html"] = ob_get_clean();
+            break;
+        case "LoaiDoiTuong-sua":
+            ob_start();
+            $filePath = "../views/admin/LoaiDoiTuong-sua.php";
             require_once($filePath);
             $response["html"] = ob_get_clean();
             break;
@@ -161,7 +178,7 @@ if ($act) {
             require_once($filePath);
             $response["html"] = ob_get_clean();
             break;
-         case "nhomks-sua":
+        case "nhomks-sua":
             ob_start();
             $filePath = "../views/admin/nhomks-sua.php";
             require_once($filePath);

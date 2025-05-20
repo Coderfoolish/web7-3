@@ -44,6 +44,11 @@ echo '  <aside id="default-sidebar"
                         </a>
                     </li>
                     <li class="nav-menu view-target hidden">
+                        <a href="" class="nav-item nav-link text-nowrap" data-page="loaiDoiTuong">
+                            Loại Đối tượng
+                        </a>
+                    </li>
+                    <li class="nav-menu view-target hidden">
                         <a href="" class="nav-item nav-link text-nowrap" data-page="nhomks">
                             Nhóm Khảo sát
                         </a>
