@@ -32,9 +32,10 @@
                 </div>
             </div>
         </div>
-        <div id="thongke-khaosat" class="mb-4 p-5 border rounded-lg shadow-md">
+        
+    </div>
+    <div id="thongke-khaosat" class="mb-4 p-5 border rounded-lg shadow-md">
 
-        </div>
     </div>
     <div id="print-loaitraloi-khaosat" class="fles flex-col">
         <div>
