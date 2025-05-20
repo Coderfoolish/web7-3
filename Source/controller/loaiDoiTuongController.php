@@ -15,82 +15,109 @@ if (isset($_GET['func'])) {
                 $accessToken = $_SESSION['accessToken'];
                 $isVaid = isAuthorization($accessToken, 'view.target');
                 if ($isVaid) {
-            $response = $loaiDoiTuongModel->getAll();} else {
-                $response = [
-                    'status' => false,
-                    'message' => 'Bạn không có quyền để thực hiện việc này'
-                ];
+                    $response = $loaiDoiTuongModel->getAll();
+                } else {
+                    $response = [
+                        'status' => false,
+                        'message' => 'Bạn không có quyền để thực hiện việc này'
+                    ];
+                }
             }
-        }
             break;
 
-        case "getAllpaging":if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
-            $accessToken = $_SESSION['accessToken'];
-            $isVaid = isAuthorization($accessToken, 'view.target');
-            if ($isVaid) {
-            $page = isset($_GET["page"]) && $_GET["page"] !== '' ? $_GET["page"] : 1;
-            $status = isset($_GET["status"]) && $_GET["status"] !== '' ? $_GET["status"] : null;
-            $response = $loaiDoiTuongModel->getAllpaging($page, $status);} else {
-                $response = [
-                    'status' => false,
-                    'message' => 'Bạn không có quyền để thực hiện việc này'
-                ];
+        case "getAllpaging":
+            if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
+                $accessToken = $_SESSION['accessToken'];
+                $isVaid = isAuthorization($accessToken, 'view.target');
+                if ($isVaid) {
+                    $page = isset($_GET["page"]) && $_GET["page"] !== '' ? $_GET["page"] : 1;
+                    $status = isset($_GET["status"]) && $_GET["status"] !== '' ? $_GET["status"] : null;
+                    $txt_search = isset($_GET["txt_search"]) ? $_GET["txt_search"] : '';
+                    $response = $loaiDoiTuongModel->getAllpaging($page, $status, $txt_search);
+                } else {
+                    $response = [
+                        'status' => false,
+                        'message' => 'Bạn không có quyền để thực hiện việc này'
+                    ];
+                }
             }
-        }
             break;
 
-        case "getById":if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
-            $accessToken = $_SESSION['accessToken'];
-            $isVaid = isAuthorization($accessToken, 'view.target');
-            if ($isVaid) {
-            if (isset($_GET["dt_id"]) && $_GET["dt_id"] !== '') {
-                $dt_id = $_GET["dt_id"];
-                $response = $loaiDoiTuongModel->getById($dt_id);
-            }} else {
-                $response = [
-                    'status' => false,
-                    'message' => 'Bạn không có quyền để thực hiện việc này'
-                ];
+        case "getById":
+            if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
+                $accessToken = $_SESSION['accessToken'];
+                $isVaid = isAuthorization($accessToken, 'view.target');
+                if ($isVaid) {
+                    if (isset($_GET["dt_id"]) && $_GET["dt_id"] !== '') {
+                        $dt_id = $_GET["dt_id"];
+                        $response = $loaiDoiTuongModel->getById($dt_id);
+                    }
+                } else {
+                    $response = [
+                        'status' => false,
+                        'message' => 'Bạn không có quyền để thực hiện việc này'
+                    ];
+                }
             }
-        }
             break;
 
-        case "create":if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
-            $accessToken = $_SESSION['accessToken'];
-            $isVaid = isAuthorization($accessToken, 'create.target');
-            if ($isVaid) {
-            if (isset($_GET["ten_dt"]) && $_GET["ten_dt"] !== '') {
-                $ten_dt = $_GET["ten_dt"];
-                $status = isset($_GET["status"]) && $_GET["status"] !== '' ? $_GET["status"] : null;
-                $response = $loaiDoiTuongModel->create($ten_dt, $status);
-            }} else {
-                $response = [
-                    'status' => false,
-                    'message' => 'Bạn không có quyền để thực hiện việc này'
-                ];
+        case "create":
+            if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
+                $accessToken = $_SESSION['accessToken'];
+                $isVaid = isAuthorization($accessToken, 'create.target');
+                if ($isVaid) {
+                    if (isset($_GET["ten_dt"]) && $_GET["ten_dt"] !== '') {
+                        $ten_dt = $_GET["ten_dt"];
+                        $status = isset($_GET["status"]) && $_GET["status"] !== '' ? $_GET["status"] : null;
+                        $response = $loaiDoiTuongModel->create($ten_dt, $status);
+                    }
+                } else {
+                    $response = [
+                        'status' => false,
+                        'message' => 'Bạn không có quyền để thực hiện việc này'
+                    ];
+                }
             }
-        }
             break;
 
-        case "update":if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
-            $accessToken = $_SESSION['accessToken'];
-            $isVaid = isAuthorization($accessToken, 'edit.target');
-            if ($isVaid) {
-            if (
-                isset($_GET["dt_id"]) && $_GET["dt_id"] !== '' &&
-                isset($_GET["ten_dt"]) && $_GET["ten_dt"] !== ''
-            ) {
-                $dt_id = $_GET["dt_id"];
-                $ten_dt = $_GET["ten_dt"];
-                $status = isset($_GET["status"]) && $_GET["status"] !== '' ? $_GET["status"] : null;
-                $response = $loaiDoiTuongModel->update($dt_id, $ten_dt, $status);
-            }} else {
-                $response = [
-                    'status' => false,
-                    'message' => 'Bạn không có quyền để thực hiện việc này'
-                ];
+        case "update":
+            if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
+                $accessToken = $_SESSION['accessToken'];
+                $isVaid = isAuthorization($accessToken, 'edit.target');
+                if ($isVaid) {
+                    if (
+                        isset($_GET["dt_id"]) && $_GET["dt_id"] !== '' &&
+                        isset($_GET["ten_dt"]) && $_GET["ten_dt"] !== ''
+                    ) {
+                        $dt_id = $_GET["dt_id"];
+                        $ten_dt = $_GET["ten_dt"];
+                        $status = isset($_GET["status"]) && $_GET["status"] !== '' ? $_GET["status"] : null;
+                        $response = $loaiDoiTuongModel->update($dt_id, $ten_dt, $status);
+                    }
+                } else {
+                    $response = [
+                        'status' => false,
+                        'message' => 'Bạn không có quyền để thực hiện việc này'
+                    ];
+                }
             }
-        }
+            break;
+        case "toggleStatus":
+            if (isset($_SESSION['accessToken']) && $_SESSION['accessToken']) {
+                $accessToken = $_SESSION['accessToken'];
+                $isVaid = isAuthorization($accessToken, 'edit.target');
+                if ($isVaid) {
+                    if (isset($_GET["loaiDoiTuong_id"]) && $_GET["loaiDoiTuong_id"] !== '') {
+                        $loaiDoiTuong_id = $_GET["loaiDoiTuong_id"];
+                        $response = $loaiDoiTuongModel->toggleStatus($loaiDoiTuong_id);
+                    }
+                } else {
+                    $response = [
+                        'status' => false,
+                        'message' => 'Bạn không có quyền để thực hiện việc này'
+                    ];
+                }
+            }
             break;
         case "loai-doi-tuong-sua":
             ob_start();

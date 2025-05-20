@@ -28,7 +28,7 @@ class LoaiDoiTuongModel
         return $data;
     }
 
-    public function getAllpaging($page, $status = null)
+    public function getAllpaging($page, $status = null, $txt_search = '')
     {
         $limit = 10;
         $conn = $this->db->getConnection();
@@ -43,6 +43,13 @@ class LoaiDoiTuongModel
             $countSql .= " AND status = ?";
             $params[] = $status;
             $types .= "i";
+        }
+
+        if (!empty($txt_search)) {
+            $sql .= " AND ten_dt LIKE ?";
+            $countSql .= " AND ten_dt LIKE ?";
+            $params[] = '%' . $txt_search . '%';
+            $types .= "s";
         }
 
         $countStmt = $conn->prepare($countSql);
@@ -110,5 +117,27 @@ class LoaiDoiTuongModel
         $stmt->bind_param("sii", $ten_dt, $status, $dt_id);
 
         return $stmt->execute();
+    }
+
+    public function toggleStatus($dt_id)
+    {
+        $conn = $this->db->getConnection();
+
+        // Bước 1: Lấy status hiện tại
+        $stmt = $conn->prepare("SELECT status FROM loai_doi_tuong WHERE dt_id = ?");
+        $stmt->bind_param("i", $dt_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $currentStatus = $row['status'];
+            $newStatus = $currentStatus == 1 ? 0 : 1;
+
+            // Bước 2: Cập nhật status mới
+            $updateStmt = $conn->prepare("UPDATE loai_doi_tuong SET status = ? WHERE dt_id = ?");
+            $updateStmt->bind_param("ii", $newStatus, $dt_id);
+            return $updateStmt->execute();
+        }
+
+        return false; // Không tìm thấy dt_id
     }
 }
