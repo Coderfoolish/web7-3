@@ -26,6 +26,7 @@ npm run dev
     │       └── taoKhaoSatPage.php
     ├── models/
     │   └── userModel.php
+    |   └── database.php //database config
     ├── controllers/
     │   └── loginController.php
     ├── admin.php // host trang admin
